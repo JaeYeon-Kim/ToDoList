@@ -59,20 +59,19 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
     // 할 일을 추가하는 메서드
     // 비동기 처리를 위해 코루틴 코드는 코루틴 스코프를 이용해 처리 가능
     // ViewModel 클래스에서는 viewModelScope 프로퍼티를 통해서 코루틴 스코프를 쉽게 사용 가능.
-    fun addTodo(text: String) {
+    fun addTodo(text: String, date: Long) {
         viewModelScope.launch {
-            db.todoDao().insert(Todo(text))
+            db.todoDao().insert(Todo(text, date))
         }
     }
 
     // 할 일을 수정하는 메서드
-    fun updateTodo(text: String) {
+    fun updateTodo(text: String, date: Long) {
         selectedTodo?.let {  todo ->
                 todo.apply {
-                    title = text
-                    date = Calendar.getInstance().timeInMillis
+                    this.title = text
+                    this.date = date
                 }
-
                 viewModelScope.launch {
                     db.todoDao().update(todo)
                 }
@@ -88,6 +87,8 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
                 viewModelScope.launch {
                     db.todoDao().delete(todo)
                 }
+                // 선택한 할일이 삭제되면 null로 할당.
+                selectedTodo = null
             }
     }
 }

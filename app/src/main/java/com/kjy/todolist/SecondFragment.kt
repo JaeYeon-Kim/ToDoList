@@ -1,5 +1,6 @@
 package com.kjy.todolist
 
+import android.icu.util.Calendar
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -40,18 +41,45 @@ class SecondFragment : Fragment() {
             binding.calendarView.date = it.date
         }
 
+        // CalendarView에서 선택한 날짜를 저장할 Calendar 객체를 선언.
+        val calendar = Calendar.getInstance()
+
+        binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
+            calendar.apply {
+                set(Calendar.YEAR, year)
+                set(Calendar.MONTH, month)
+                set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            }
+        }
+
         binding.doneFab.setOnClickListener {
             if (binding.todoEditText.text.toString().isNotEmpty()) {
-                viewModel.addTodo(binding.todoEditText.text.toString())
+                if (viewModel.selectedTodo != null) {
+                    viewModel.updateTodo(
+                        binding.todoEditText.text.toString(),
+                        calendar.timeInMillis,    // 수정시 객체에 저장된 시간 정보를 활용.
+                    )
+                } else {
+                    viewModel.addTodo(binding.todoEditText.text.toString(),
+                        calendar.timeInMillis,    // 수정시 객체에 저장된 시간 정보를 활용
+                    )
+                }
                 findNavController().popBackStack()
-            } else {
-                viewModel.addTodo(binding.todoEditText.text.toString())
             }
+
+        }
+        binding.deleteFab.setOnClickListener {
+            // deleteTodo 메서드는 끝나면 화면을 이전 화면으로 전환.
+            viewModel.deleteTodo(viewModel.selectedTodo!!.id)
             findNavController().popBackStack()
         }
 
+        // 선택된 할일이 없을 때는 지우기 버튼 감추기
+        // 뷰의 visibility 속성에 View.GONE 설정하여 화면에서 감춤.
+        if (viewModel.selectedTodo == null) {
+            binding.deleteFab.visibility = View.GONE
+        }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
